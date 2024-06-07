@@ -1,17 +1,56 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import GoogleLogin from "../components/Login-Registration/GoogleLogin";
+import useAuth from "../hooks/useAuth";
 
 const Login = () => {
-  const handleSubmit = (e) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+
+  const { signIn, user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = location?.state?.from?.pathname || "/";
+
+  useEffect(() => {
+    if (email && password) {
+      setIsButtonDisabled(false);
+    } else {
+      setIsButtonDisabled(true);
+    }
+  }, [email, password]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const form = e.target;
-    const email = form.email.value;
-    const password = form.password.value;
 
     console.log(email, password);
+
+    await signIn(email, password);
+
+    // Reset form fields
+    form.reset();
+    setEmail("");
+    setPassword("");
+    setIsButtonDisabled(true);
   };
+
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value);
+  };
+
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+  };
+
+  useEffect(() => {
+    if (user) {
+      navigate(from, { replace: true });
+    }
+  }, [user, from, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-rose-100 via-gray-200 to-teal-50 flex items-center justify-center">
@@ -28,6 +67,8 @@ const Login = () => {
               type="email"
               placeholder="Email"
               name="email"
+              value={email}
+              onChange={handleEmailChange}
               required
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-400 sm:text-sm"
             />
@@ -41,6 +82,8 @@ const Login = () => {
               name="password"
               type="password"
               autoComplete="current-password"
+              value={password}
+              onChange={handlePasswordChange}
               required
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-400 sm:text-sm"
               placeholder="Password"
@@ -73,7 +116,12 @@ const Login = () => {
           <div className="mt-6">
             <button
               type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              disabled={isButtonDisabled}
+              className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                isButtonDisabled
+                  ? "bg-gray-500 cursor-not-allowed"
+                  : "bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500"
+              }`}
             >
               Log in
             </button>

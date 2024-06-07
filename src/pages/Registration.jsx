@@ -1,12 +1,19 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import GoogleLogin from "../components/Login-Registration/GoogleLogin";
+import useAuth from "../hooks/useAuth";
 
 const Registration = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
   const [passMatch, setPassMatch] = useState(true);
+
+  const { createUser, user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = location?.state?.from?.pathname || "/";
 
   useEffect(() => {
     if (password && confirmPassword && password === confirmPassword) {
@@ -18,6 +25,12 @@ const Registration = () => {
     }
   }, [password, confirmPassword]);
 
+  useEffect(() => {
+    if (user) {
+      navigate(from, { replace: true });
+    }
+  }, [user, from, navigate]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -26,6 +39,13 @@ const Registration = () => {
     const email = form.email.value;
 
     console.log(name, email, password, confirmPassword);
+
+    if (password === confirmPassword) {
+      createUser(email, password);
+      if (user) {
+        navigate(from);
+      }
+    }
 
     // Reset form fields
     form.reset();
